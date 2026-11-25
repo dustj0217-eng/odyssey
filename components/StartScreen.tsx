@@ -1,4 +1,5 @@
 'use client';
+import { Icon, type IconName } from './GameUI';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Role } from '@/lib/types';
@@ -10,7 +11,7 @@ export function StartScreen({onStart}:Props){
   const [role,setRole]=useState<Role>('programmer');
   function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();onStart(company,game,role);}
   return <main className="container"><div className="prologue">
-    <div className="eyebrow">Prologue · 출항</div>
+    <div className="game-title">21세기 오디세이</div><div className="eyebrow">프롤로그</div>
     <h1>모든 항해에는<br/>목적지가 있다.</h1>
     <p>트로이 전쟁이 끝나고, 오디세우스가 이타카로 돌아가는 데에는 십 년이 걸렸다고 합니다.</p>
     <p>당신에게는 배도, 선원도, 신들의 축복도 없습니다.</p>
@@ -21,11 +22,11 @@ export function StartScreen({onStart}:Props){
     <form onSubmit={submit}>
       <label className="form-field"><span>당신의 스튜디오 이름</span><input className="input" maxLength={28} value={company} onChange={e=>setCompany(e.target.value)} required /></label>
       <label className="form-field"><span>처음 만들 게임의 제목</span><input className="input" maxLength={28} value={game} onChange={e=>setGame(e.target.value)} required /></label>
-      <label className="form-field"><span>대표의 주력 능력</span><select className="select" value={role} onChange={e=>setRole(e.target.value as Role)}>
-        <option value="programmer">프로그래밍</option><option value="artist">아트 / 연출</option><option value="planner">기획 / 운영</option>
-      </select></label>
+      <fieldset className="role-field"><legend>대표의 주력 능력</legend><div className="role-grid">
+        {([['programmer','code','프로그래밍'],['artist','art','아트 / 연출'],['planner','plan','기획 / 운영']] as [Role,IconName,string][]).map(([id,icon,label])=><label className="role-tile" key={id}><input type="radio" name="role" value={id} checked={role===id} onChange={()=>setRole(id)}/><span><Icon name={icon}/>{label}</span></label>)}
+      </div></fieldset>
       <button type="submit" className="button primary full">첫 번째 항해 시작하기</button>
     </form>
-    <p className="hint" style={{marginTop:14}}>선택과 대사가 일지에 저장됩니다. 자동 저장은 이 브라우저에서만 유지됩니다.</p>
+    <p className="hint" >선택과 대사가 일지에 저장됩니다. 자동 저장은 이 브라우저에서만 유지됩니다.</p>
   </div></main>
 }

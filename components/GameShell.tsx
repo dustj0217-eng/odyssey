@@ -5,6 +5,7 @@ import { Diary } from './Diary';
 import { Planner } from './Planner';
 import { Status } from './Status';
 import { MythOverlay } from './MythOverlay';
+import { Icon, type IconName } from './GameUI';
 import { createGame, clone, loadGame, resetGame, saveGame } from '@/lib/state';
 import { Rules } from '@/lib/rules';
 import { Story } from '@/lib/story';
@@ -29,7 +30,11 @@ export default function GameShell(){
   useEffect(()=>{
     if(!scrollWanted.current || tab!=='diary'||!game)return;
     scrollWanted.current=false;
-    window.requestAnimationFrame(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'}));
+    window.requestAnimationFrame(()=>{
+      const target=document.getElementById('current-chapter');
+      if(target)target.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+      else window.scrollTo({top:0});
+    });
   },[game,tab]);
 
   const change=useCallback((fn:(s:GameState)=>boolean, nextTab?:Tab, scroll=true)=>{
@@ -97,11 +102,37 @@ export default function GameShell(){
   if(!game)return <div className="app-shell"><StartScreen onStart={start}/></div>;
   const active=game.companyState.team.filter(t=>t.active).length;
   return <div className="app-shell">
-    <header className="header"><div className="eyebrow">21st century odyssey · Where is your Ithaca</div>
-      <div className="header-row"><div className="brand">항해 일지</div>
-      <div className="header-right">{Story.date(game)}{game.week?` · ${game.week}주차`:''}</div></div>
-      <div className="mini-stats"><span>회사 <b>{Math.round(game.companyState.cash).toLocaleString('ko-KR')}만</b></span>
-      <span>건강 <b>{game.player.health}</b></span><span>스트레스 <b>{game.player.stress}</b></span><span>동료 <b>{active}명</b></span></div>
+    <header className="header">
+      <div className="header-row">
+        <span className="brand">
+          {game.company}
+        </span>
+        <span className="header-right">
+          {Story.date(game)}{game.week?` · ${game.week}주차`:''}
+        </span>
+      </div>
+      <div className="mini-stats">
+        <div className="hud-stat tone-health">
+          <Icon name="heart"/>
+          <b>{game.player.health}</b>
+          <span>건강</span>
+        </div>
+        <div className="hud-stat tone-stress">
+          <Icon name="stress"/>
+          <b>{game.player.stress}</b>
+          <span>스트레스</span>
+        </div>
+        <div className="hud-stat tone-money">
+          <Icon name="wallet"/>
+          <b>{Math.round(game.companyState.cash).toLocaleString('ko-KR')}만</b>
+          <span>회사 자금</span>
+        </div>
+        <div className="hud-stat tone-team">
+          <Icon name="team"/>
+          <b>{active}명</b>
+          <span>동료</span>
+        </div>
+      </div>
     </header>
     {tab==='diary'?<Diary game={game} onChoice={choice=>change(s=>Rules.choose(s,choice),'diary')}
       onAdvance={()=>change(Rules.advanceWeek,'diary')} onNextMonth={()=>change(Rules.nextMonth,'planner',false)}
@@ -114,9 +145,9 @@ export default function GameShell(){
       onNewProject={newProject} onLeaveCalypso={()=>change(Rules.leaveCalypso,'diary')}
       onReset={reset} onExport={exportText} onDebug={(id:EventId)=>change(s=>Rules.openEvent(s,id),'diary')}/>}
     <nav className="bottom-nav" aria-label="게임 메뉴">
-      {([['diary','▤','항해 일지'],['planner','▦','일정표'],['status','◇','상태 / 경영']] as [Tab,string,string][]).map(([id,icon,label])=><button
+      {([['diary','book','일지'],['planner','calendar','일정'],['status','person','상태 / 경영']] as [Tab,IconName,string][]).map(([id,icon,label])=><button
         key={id} className={`nav-btn ${tab===id?'active':''}`} onClick={()=>changeTab(id)} aria-current={tab===id?'page':undefined}>
-        <span className="nav-icon" aria-hidden>{icon}</span><span>{label}</span>
+        <Icon name={icon} className="nav-icon"/><span>{label}</span>
       </button>)}
     </nav>
     <MythOverlay eventId={game.pending} onChoose={choice=>change(s=>Rules.choose(s,choice),'diary')}/>
