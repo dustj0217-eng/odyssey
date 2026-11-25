@@ -14,8 +14,11 @@ export function Planner({game,onSchedule,onAdvance,onNextMonth,onShowDiary}:Prop
   const nights=game.schedule.slice(game.week).filter(w=>w.night!=='rest').length;
   const risk=nights>=3?'야간 작업이 많습니다. 당장의 성과가 늘어도 피로가 누적될 수 있습니다.':nights===0?'밤 시간을 모두 휴식에 배정했습니다. 회복에는 유리하지만 수입과 개발 시간이 줄어듭니다.':'일과 휴식을 병행하는 일정입니다. 결과는 능력치와 주사위에 따라 달라집니다.';
   function options(slot:Slot){
-    return ACTION_IDS.filter(id=>DATA.ACTIONS[id].slots.includes(slot) &&
-      (game.phase==='calypso'?id==='job'||id==='rest'||id==='study'||id==='develop':id!=='job'));
+    return ACTION_IDS.filter(id=>{
+      const allowedSlots: readonly Slot[] = DATA.ACTIONS[id].slots;
+      return allowedSlots.includes(slot) &&
+        (game.phase==='calypso'?id==='job'||id==='rest'||id==='study'||id==='develop':id!=='job');
+    });
   }
   return <main className="container">
     <div className="page-intro"><div className="eyebrow">monthly plan</div>
