@@ -52,7 +52,18 @@ export default function GameShell(){
   }
   function setSchedule(week:number,slot:Slot,action:ActionId){
     change(s=>{
-      if(week<s.week||week>=4||s.pending||s.ending||!DATA.ACTIONS[action]?.slots.includes(slot))return false;
+      const allowedSlots: readonly Slot[] =
+        DATA.ACTIONS[action]?.slots ?? [];
+
+      if (
+        week < s.week ||
+        week >= 4 ||
+        s.pending ||
+        s.ending ||
+        !allowedSlots.includes(slot)
+      ) {
+        return false;
+      }
       if(s.phase==='calypso' && slot==='day')return false;
       s.schedule[week][slot]=action;return true;
     },undefined,false);
