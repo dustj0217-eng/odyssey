@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ITHACA STUDIO — 21세기 오디세이
 
-## Getting Started
+**1인 인디게임 스튜디오 경영 텍스트 게임 / 동작하는 첫 번째 프로토타입 (v0.1)**
 
-First, run the development server:
+플레이어는 한 명의 인디게임 개발자가 되어 **16주 동안 첫 게임을 제작**합니다. 매주 5칸의 작업 시간을 배분해 개발, 품질 개선, 버그 수정, 홍보, 외주, 휴식을 선택합니다. 운영비는 계속 나가고, 고정 사건과 대화가 들어오며, 개발 진행도가 65% 이상이면 게임을 출시할 수 있습니다. 출시 결과는 실제 플레이 상태로 계산합니다.
+
+- **기술:** Next.js(App Router), React, TypeScript, Tailwind CSS v4, Node.js
+- **로그인/DB/외부 API 불필요:** 브라우저의 `localStorage`에 자동 저장됩니다.
+- **이미지 파일 불필요:** 화면은 텍스트와 CSS만으로 구성했습니다.
+- **메신저:** 자연어 AI는 아직 아닙니다. `개발 2`, `버그 수정 1`, `홍보 1`, `외주 1`, `휴식 1`, `다듬기 1`처럼 간단한 **규칙 기반 작업 명령**을 이해합니다.
+
+## 1. 설치와 실행
+
+1. ZIP을 압축 해제합니다.
+2. VS Code에서 **`ithaca-studio` 폴더 자체**를 엽니다. (`package.json`이 보이는 위치)
+3. VS Code 터미널에서 아래 명령어를 입력합니다.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. 브라우저에서 **http://localhost:3000** 을 엽니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+권장 환경: **Node.js 20 이상**. 다른 프로젝트가 3000번 포트를 사용하면 Next.js가 안내하는 대체 포트를 열면 됩니다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+배포용 빌드 테스트:
 
-## Learn More
+```bash
+npm run typecheck
+npm run build
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+Vercel 배포: 이 폴더를 GitHub에 올리고 Vercel에서 해당 저장소를 Next.js 프로젝트로 가져오면 됩니다. 별도 환경변수가 필요하지 않습니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 2. 폴더 구조 — 최대한 단순하게
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+ithaca-studio/
+├─ app/
+│  ├─ page.tsx          ← 모든 게임 화면과 클릭/입력 처리
+│  ├─ globals.css       ← 전체 색상, 패널, 버튼 스타일 + Tailwind
+│  └─ layout.tsx        ← 페이지 제목 등 공통 설정
+│
+├─ game.ts              ← 게임의 모든 규칙·상태·사건·엔딩 계산
+├─ package.json         ← 사용 라이브러리와 npm 실행 명령
+├─ tsconfig.json        ← TypeScript 설정
+├─ postcss.config.mjs   ← Tailwind v4 연동 설정
+├─ next.config.ts       ← Next.js 기본 설정
+├─ .gitignore           ← 업로드/저장하지 않을 파일 목록
+└─ README.md            ← 이 안내문
+```
 
-## Deploy on Vercel
+**핵심적으로 수정할 파일은 `game.ts`, `app/page.tsx`, `app/globals.css` 세 개뿐**입니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+별도의 `components/`, `hooks/`, `stores/`, `lib/`, `data/` 폴더로 나누지 않았습니다. 기능이 커져 유지보수가 실제로 불편해졌을 때만 나누세요.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 파일별 수정 가이드
+
+| 하고 싶은 작업 | 수정할 곳 |
+|---|---|
+| 초기 자금, 운영비, 주간 시간 변경 | `game.ts` — `newGame()`, `advanceWeek()`의 운영비 부분, `ACTION_POINTS` |
+| 작업 종류·설명 변경 | `game.ts` — `TASKS` 및 `advanceWeek()` |
+| 스토리 사건/NPC/선택지 추가 | `game.ts` — `EVENTS` 배열 |
+| 선택에 따른 수치 변화 변경 | `game.ts` — 사건의 `effect` 객체 |
+| 출시 조건 변경 | `game.ts` — `releaseGame()` / `app/page.tsx`의 `canRelease` **양쪽 모두** |
+| 판매량·엔딩 공식 변경 | `game.ts` — `makeResult()` |
+| 메신저 명령어 확장 | `game.ts` — `messageCommand()` |
+| 대시보드 UI 수정 | `app/page.tsx` — `tab === 'desk'` 부분 |
+| 작업 화면 수정 | `app/page.tsx` — `WorkSelector`, `tab === 'work'` 부분 |
+| 색상/폰트/배경 수정 | `app/globals.css` + `app/page.tsx`의 Tailwind 클래스 |
+| 사이트 제목 수정 | `app/layout.tsx` |
+
+## 3. 게임 진행 방법
+
+1. 스튜디오 이름, 게임 제목, 장르를 지정하고 시작합니다.
+2. **작업실**에서 주간 5칸을 분배합니다. 원한다면 메신저에 `개발 2` 등의 명령을 보내 계획을 추가할 수 있습니다.
+3. **이번 주 마감**을 눌러 운영 결과를 확인합니다. 미배분 작업 시간은 다음 주로 이월되지 않습니다.
+4. 특정 주에는 메일 사건이 들어옵니다. 답변을 선택한 뒤 다음 주를 진행할 수 있습니다.
+5. 개발 진행도 **65% 이상**에서 언제든 출시 가능합니다. 출시가 너무 이르면 완성도·버그 등에 따라 결과가 나빠질 수 있습니다.
+6. **16주를 완료할 때까지 출시하지 않으면** 미출시 엔딩, 자금이 심각하게 부족하면 운영 중단 엔딩을 봅니다. 중간에 안정적인 직장을 선택하는 것도 하나의 엔딩입니다.
+7. 엔딩에서 판매량, 수입, 잔여 자금, 항해 기록을 확인합니다.
+
+현재 이벤트는 **2, 4, 6, 8, 10, 12, 14주 차**에 발생합니다. 『오디세이아』의 세이렌·포세이돈·칼립소를 현대 인디게임 개발의 위기와 유혹으로 각색했습니다.
+
+## 4. 새 사건 추가 예시
+
+`game.ts`의 `EVENTS` 배열에 아래 객체를 추가하면 됩니다. **week는 기존 사건과 겹치지 않도록** 설정하세요. 현재는 매주 최대 하나의 고정 사건만 표시합니다.
+
+```ts
+{
+  id: 'unexpected-funding',
+  week: 15,
+  character: '지역 창업 센터',
+  role: '안내 메일',
+  title: '창업 지원금 신청 마감',
+  body: '프로젝트를 소개하고 지원금을 신청할 기회가 생겼습니다.',
+  options: [
+    {
+      label: '지원금을 신청한다',
+      detail: '시간을 들이는 대신 자금 확보',
+      reply: '지원금이 입금됐습니다. 다만 준비에 시간을 사용했습니다.',
+      effect: { cash: 95, progress: -3, fatigue: 7 },
+      flag: 'applied-for-grant',
+    },
+    {
+      label: '개발에 집중한다',
+      detail: '자금 추가 없음',
+      reply: '지원금 기회를 넘겼습니다.',
+      effect: { progress: 3 },
+    },
+  ],
+},
+```
+
+`effect`에서 쓸 수 있는 상태 키: `cash`, `progress`, `quality`, `bugs`, `hype`, `fatigue`, `autonomy`.
+
+`cash` 단위는 **만 원**입니다. 대부분의 지표는 **0~100** 범위이고, 버그는 **0~80** 범위로 제한됩니다. `minCash: 85`를 옵션에 넣으면 자금이 부족한 경우 해당 선택을 누를 수 없습니다. `flag`는 과거 선택을 기록하는 문자열입니다. `conclude: true`는 현재 구현상 *진로 변경 엔딩*을 바로 띄웁니다.
+
+## 5. 저장 및 초기화
+
+- 페이지에서 자동 저장: `localStorage['ithaca-studio-save-v1']`.
+- 오른쪽 위 **초기화** 버튼으로 처음부터 시작할 수 있습니다.
+- 로그인/계정 간 동기화는 없습니다. 같은 브라우저, 같은 도메인에서 이어집니다.
+- 게임 데이터 구조를 크게 변경하면 기존 저장본과 호환되지 않을 수 있으므로 `SAVE_KEY`의 버전명을 바꾸거나 초기화해야 합니다.
+
+## 6. public 폴더는 언제 만드나요?
+
+현재는 이미지 없이 동작하므로 **`public/` 폴더를 굳이 만들지 않았습니다.** 추후 음악이나 효과음을 넣고 싶으면 루트에 `public` 폴더를 만들면 됩니다.
+
+```text
+ithaca-studio/
+├─ public/
+│  ├─ click.mp3
+│  └─ ambience.mp3
+└─ ...
+```
+
+브라우저에서는 `/click.mp3`, `/ambience.mp3` 주소로 접근할 수 있습니다. CSS만으로 UI를 구현했으므로 이미지 에셋은 필수가 아닙니다.
+
+## 7. 이번 버전에서 일부러 제외한 것
+
+- 실제 LLM 캐릭터 채팅, 대화 메모리, AI에 의한 유동적 스토리 생성
+- Supabase, 로그인, 클라우드 저장, 관리자 화면
+- 사원 여러 명의 스케줄, 계약/세금/플랫폼 수수료의 정교한 시뮬레이션
+- 오픈월드식 무한 플레이, 랜덤 이벤트 생성, 복수 프로젝트 동시 운영
+- 이미지 생성 및 외부 에셋
+
+시험 일정과 12월 3일 마감을 고려해 **경영 루프가 먼저 재미있게 작동하는지** 확인하는 버전입니다. 외부 AI가 없는 지금도 시작부터 엔딩까지 플레이할 수 있습니다.
+
+## 8. 다음 개발 우선순위
+
+1. **밸런싱:** 2~3회 직접 플레이하면서 자금·개발 진행·버그가 어떤 식으로 쌓이는지 확인합니다.
+2. **대화의 실제 의미 강화:** 단순 작업 명령을 넘어, NPC가 플레이 상태와 지난 선택에 따라 답장을 다르게 하도록 확장합니다.
+3. **게임성 강화:** 출시 후 판매/리뷰를 주 단위로 운영하는 짧은 후반부를 추가할 수 있습니다.
+4. **시연용 안정화:** 모바일 레이아웃, 저장, 초기화, 버그 및 글 표현 수정.
+5. **시간이 남을 때만:** 서버 API 경유 AI 채팅. API 키를 클라이언트 코드나 `NEXT_PUBLIC_` 환경변수에 넣지 마세요.
+
+---
+
+**핵심 원칙:** 게임의 수치와 선택 결과는 `game.ts`에서 결정하고, `app/page.tsx`는 보여주고 클릭을 받는 역할만 하도록 유지합니다. 기능이 많아지기 전까지 폴더를 더 늘릴 필요가 없습니다.
